@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خطوبة إسلام & مريم</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #d4af37; --bg-night: #050b1a; }
+        body { font-family: 'Cairo', sans-serif; background: var(--bg-night); color: white; margin: 0; overflow: hidden; height: 100vh; position: relative; }
+
+        /* حاوية التساقط */
+        #falling-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
+        .falling-item { position: absolute; top: -50px; animation: fall linear forwards; }
+        @keyframes fall { to { transform: translateY(110vh) rotate(360deg); opacity: 0; } }
+
+        /* شريط المهندس إبراهيم */
+        .footer-credits {
+            position: fixed; bottom: 0; left: 0; width: 100%; 
+            background: rgba(0, 0, 0, 0.9); color: var(--gold);
+            padding: 8px 0; z-index: 5000; border-top: 1px solid var(--gold);
+        }
+        .marquee { white-space: nowrap; overflow: hidden; display: block; animation: marquee 12s linear infinite; font-weight: bold; text-align: center; }
+        @keyframes marquee { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+        /* تعديل السلايدر (الإصلاح هنا) */
+        .slider-container { 
+            width: 85%; /* عرض مناسب للموبايل */
+            max-width: 320px; 
+            height: 450px; /* زيادة الارتفاع ليناسب صور الخطوبة الطولية */
+            margin: 20px auto; 
+            border: 4px solid var(--gold); 
+            border-radius: 25px; 
+            overflow: hidden; 
+            position: relative;
+            background: #000;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+        .slider-img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; /* هذا السطر يضمن أن الصورة تملأ المربع بالكامل دون فراغات سوداء */
+            position: absolute; 
+            top: 0; 
+            left: 0;
+            opacity: 0; 
+            transition: opacity 1.5s ease-in-out; 
+        }
+        .slider-img.active-img { opacity: 1; }
+
+        /* باقي التنسيقات */
+        .page { display: none; height: 100vh; text-align: center; padding: 20px; box-sizing: border-box; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; }
+        .active { display: flex; animation: fadeIn 0.8s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .btn-main { background: transparent; color: var(--gold); padding: 12px 30px; border-radius: 50px; border: 2px solid var(--gold); cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; margin-top: 15px; }
+        .moving-title { font-family: 'Amiri'; font-size: 2.5rem; color: var(--gold); animation: titleMove 3s infinite ease-in-out; }
+        @keyframes titleMove { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+        /* اللعبة والعداد */
+        .time-box { border: 2px solid var(--gold); padding: 8px; border-radius: 12px; background: rgba(212, 175, 55, 0.1); min-width: 60px; animation: pulse 2s infinite; }
+        @keyframes pulse { 50% { transform: scale(1.05); } }
+        #game-board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; width: 260px; margin: 15px auto; border: 2px solid var(--gold); padding: 10px; border-radius: 15px; }
+        .cell { height: 50px; border: 1px solid rgba(212,175,55,0.2); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+        .player { font-size: 30px; cursor: pointer; filter: drop-shadow(0 0 10px gold); }
+    </style>
+</head>
+<body>
+
+<audio id="bgMusic" loop><source src="wedding-song.mp3" type="audio/mpeg"></audio>
+<div id="falling-container"></div>
+
+<div class="footer-credits">
+    <div class="marquee">تم التصميم من خلال مهندس ابراهيم سعد © 2026 - Turbo Front Development</div>
+</div>
+
+<div id="password-layer" class="page active">
+    <h2 class="moving-title">دعوة خاصة ✨</h2>
+    <input type="text" id="passInput" style="background:transparent; border:2px solid var(--gold); color:white; padding:12px; border-radius:10px; width:200px; text-align:center; outline:none;" placeholder="كلمة السر">
+    <button class="btn-main" onclick="checkPassword()">دخول ✨</button>
+</div>
+
+<div id="game-layer" class="page">
+    <h2 style="color: var(--gold);">المس الخاتم لتحريكه 💍</h2>
+    <div id="game-board"></div>
+    <div id="dice-note" style="color: var(--gold); font-weight: bold; margin-top: 10px;"></div>
+</div>
+
+<div id="p1" class="page">
+    <h1 class="moving-title">إسلام & مريم</h1>
+    <div class="slider-container">
+        <img src="pic1.jpg" class="slider-img active-img">
+        <img src="pic2.jpg" class="slider-img">
+        <img src="pic3.jpg" class="slider-img">
+    </div>
+    <button class="btn-main" onclick="nextPage(2)">التفاصيل والمكان 📍</button>
+</div>
+
+<div id="p2" class="page">
+    <h1 class="moving-title">موعدنا المنتظر</h1>
+    <div id="countdown" style="display:flex; gap:10px; margin: 20px 0;">
+        <div class="time-box"><span id="days">0</span> يوم</div>
+        <div class="time-box"><span id="hours">0</span> ساعة</div>
+        <div class="time-box"><span id="mins">0</span> دقيقة</div>
+    </div>
+    <div style="width: 90%; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; border: 1px solid var(--gold);">
+        <a href="https://wa.me/201101475409" target="_blank" class="btn-main" style="background: #25d366; border-color: #25d366; color: white; width: 80%; margin-bottom: 10px;">كلمة للعروسين 💬</a>
+        <a href="https://maps.google.com" target="_blank" class="btn-main" style="border-color:#2ecc71; color:#2ecc71; width: 80%;">موقع المنزل 📍</a>
+    </div>
+</div>
+
+<script>
+    function checkPassword() {
+        if(document.getElementById('passInput').value === "بحبك") {
+            document.getElementById('password-layer').classList.remove('active');
+            document.getElementById('game-layer').classList.add('active');
+            initBoard();
+            startFallingEffects();
+        } else { alert("كلمة السر خطأ!"); }
+    }
+
+    function startFallingEffects() {
+        const container = document.getElementById('falling-container');
+        const items = ['❤️', '🌸', '🌹', '💖'];
+        setInterval(() => {
+            const item = document.createElement('div');
+            item.className = 'falling-item';
+            item.innerText = items[Math.floor(Math.random() * items.length)];
+            item.style.left = Math.random() * 100 + 'vw';
+            item.style.fontSize = Math.random() * 20 + 15 + 'px';
+            const duration = Math.random() * 3 + 4;
+            item.style.animationDuration = duration + 's';
+            container.appendChild(item);
+            setTimeout(() => { item.remove(); }, duration * 1000);
+        }, 300);
+    }
+
+    // لعبة السلم والثعبان
+    let currentPos = 1;
+    function initBoard() {
+        const board = document.getElementById('game-board');
+        board.innerHTML = '';
+        for(let i=16; i>=1; i--) {
+            let cell = document.createElement('div');
+            cell.className = 'cell'; cell.id = 'cell-' + i;
+            cell.innerText = i;
+            board.appendChild(cell);
+        }
+        updatePlayerUI();
+    }
+
+    function updatePlayerUI() {
+        document.querySelectorAll('.player').forEach(p => p.remove());
+        const cell = document.getElementById('cell-' + currentPos);
+        let p = document.createElement('div');
+        p.className = 'player'; p.innerHTML = '💍';
+        p.onclick = movePlayer;
+        cell.appendChild(p);
+    }
+
+    function movePlayer() {
+        const roll = Math.floor(Math.random() * 3) + 1;
+        document.getElementById('dice-note').innerText = "تحركت " + roll + " خطوات";
+        if(currentPos + roll <= 16) {
+            currentPos += roll;
+            updatePlayerUI();
+        }
+        if(currentPos === 16) {
+            setTimeout(() => {
+                document.getElementById('game-layer').classList.remove('active');
+                nextPage(1);
+                document.getElementById('bgMusic').play();
+            }, 800);
+        }
+    }
+
+    // السلايدر
+    function startSlider() {
+        let imgs = document.querySelectorAll('.slider-img'); 
+        let i = 0;
+        setInterval(() => {
+            imgs[i].classList.remove('active-img');
+            i = (i + 1) % imgs.length;
+            imgs[i].classList.add('active-img');
+        }, 3500);
+    }
+
+    // العداد
+    function updateTimer() {
+        const diff = new Date('2026-05-25T20:00:00') - new Date();
+        if(diff > 0) {
+            document.getElementById('days').innerText = Math.floor(diff/(1000*60*60*24));
+            document.getElementById('hours').innerText = Math.floor((diff/(1000*60*60))%24);
+            document.getElementById('mins').innerText = Math.floor((diff/1000/60)%60);
+        }
+    }
+    setInterval(updateTimer, 1000);
+
+    function nextPage(n) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('p'+n).classList.add('active');
+        if(n === 1) startSlider();
+    }
+</script>
+</body>
+</html>
